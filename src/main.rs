@@ -6,6 +6,7 @@ use anyhow::Result;
 use reqwest::{Client, Url};
 use serde_json::Value;
 use std::str::FromStr;
+use alloy::dyn_abi::TypedData;
 use uuid::Uuid;
 
 #[tokio::main]
@@ -31,16 +32,16 @@ async fn main() -> Result<()> {
     // println!("{:?}", response);
 
     // Step 2: Sign the EIP-712 login message with our private key
-    dbg!(&response.data.eip712Message);
+    dbg!(&response.data.eip712_message);
 
-    let digest = response.data.eip712Message.digest()?;
-    let signature = private_key.sign_hash(&digest.into()).await?;
+    let digest = response.data.eip712_message.eip712_signing_hash()?;
+    let signature = private_key.sign_hash(&digest).await?;
     let sig_bytes = signature.as_bytes();
     let signature = format!("0x{}", alloy::hex::encode(sig_bytes));
 
     println!("Signature: {}", signature.to_string());
     println!("addr: {}", &address.to_string());
-    println!("nonceHash: {}", &response.data.nonceHash);
+    println!("nonceHash: {}", &response.data.nonce_hash);
 
     // Step 3: Verify login with signature to obtain JWT token
     let mut url = Url::parse(&format!("{base_url}/v1/user/login/verify"))?;
@@ -48,7 +49,7 @@ async fn main() -> Result<()> {
     {
         let mut pairs = url.query_pairs_mut();
         pairs.append_pair("addr", &address.to_string());
-        pairs.append_pair("nonceHash", &response.data.nonceHash);
+        pairs.append_pair("nonceHash", &response.data.nonce_hash);
         pairs.append_pair("signature", &signature.to_string());
     }
     let response = client
