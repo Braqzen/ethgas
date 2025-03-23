@@ -1,4 +1,5 @@
-use alloy::primitives::{B256, keccak256};
+use alloy::dyn_abi::TypedData;
+use alloy::primitives::{B256};
 use anyhow::Result;
 use serde::{Deserialize, Deserializer, Serialize, de};
 
@@ -11,9 +12,10 @@ pub struct EthGasResponse {
 #[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct Data {
     pub status: String,
-    #[serde(deserialize_with = "deserialize_eip712_message")]
-    pub eip712Message: EIP712Message,
-    pub nonceHash: String,
+    #[serde(rename = "eip712Message")]
+    pub eip712_message: TypedData,
+    #[serde(rename = "nonceHash")]
+    pub nonce_hash: String,
 }
 
 fn deserialize_eip712_message<'de, D>(deserializer: D) -> Result<EIP712Message, D::Error>
@@ -27,7 +29,7 @@ where
 #[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct EIP712Message {
     pub types: EIP712Types,
-    pub primaryType: String,
+    pub primary_type: String,
     pub message: EIP712MessageData,
     pub domain: EIP712Domain,
 }
