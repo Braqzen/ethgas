@@ -1,10 +1,8 @@
 use alloy::dyn_abi::TypedData;
-use alloy::primitives::{B256};
-use anyhow::Result;
-use serde::{Deserialize, Deserializer, Serialize, de};
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
-pub struct EthGasResponse {
+pub struct LoginResponse {
     pub success: bool,
     pub data: Data,
 }
@@ -18,31 +16,12 @@ pub struct Data {
     pub nonce_hash: String,
 }
 
-fn deserialize_eip712_message<'de, D>(deserializer: D) -> Result<EIP712Message, D::Error>
-where
-    D: Deserializer<'de>,
-{
-    let s = String::deserialize(deserializer)?;
-    serde_json::from_str(&s).map_err(de::Error::custom)
-}
-
 #[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct EIP712Message {
     pub types: EIP712Types,
     pub primary_type: String,
     pub message: EIP712MessageData,
     pub domain: EIP712Domain,
-}
-
-impl EIP712Message {
-    pub fn digest(&self) -> Result<B256> {
-        let json = serde_json::to_string(self)?;
-        // TODO: this errors
-        let typed_data: ssi_eip712::TypedData = serde_json::from_str(&json)?;
-        let digest = typed_data.hash()?;
-
-        Ok(alloy::primitives::FixedBytes(digest))
-    }
 }
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
